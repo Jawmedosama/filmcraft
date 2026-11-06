@@ -45,7 +45,7 @@ impl FilmcraftApp {
         if !self.ui.dock.contains(&p) {
             let near = match p {
                 // a side panel beside Properties (or Essential Sound), never over the Program monitor
-                PanelKind::TextToSpeech => [PanelKind::Properties, PanelKind::EssentialSound, PanelKind::EssentialGraphics]
+                PanelKind::TextToSpeech | PanelKind::AiStudio => [PanelKind::Properties, PanelKind::EssentialSound, PanelKind::EssentialGraphics]
                     .into_iter()
                     .find(|k| self.ui.dock.contains(k))
                     .unwrap_or(PanelKind::Program),

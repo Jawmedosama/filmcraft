@@ -179,8 +179,12 @@ const ANALYSIS_CACHE: &[(&str, &str)] = &[("mediaCache", "In the Media Cache"), 
 const TRANSCRIBE_SCOPE: &[(&str, &str)] =
     &[("sequenceClips", "Auto-transcribe only clips in sequences"), ("allImported", "Auto-transcribe all imported clips")];
 
-const MODELS: &[(&str, &str)] =
-    &[("whisper-tiny", "Whisper tiny (fastest)"), ("whisper-base", "Whisper base (balanced)"), ("whisper-small", "Whisper small (most accurate)")];
+const MODELS: &[(&str, &str)] = &[
+    ("whisper-tiny", "Whisper tiny (fastest)"),
+    ("whisper-base", "Whisper base (balanced)"),
+    ("whisper-small", "Whisper small (most accurate)"),
+    ("whisperx", "WhisperX (FilmCraft-AI, GPU)"),
+];
 
 const AUTO_SCROLL: &[(&str, &str)] = &[("noScroll", "No Scroll"), ("pageScroll", "Page Scroll"), ("smoothScroll", "Smooth Scroll")];
 

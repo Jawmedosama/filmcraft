@@ -22,6 +22,7 @@ pub mod models;
 pub mod vad;
 #[cfg(feature = "whisper")]
 pub mod whisper;
+pub mod whisperx;
 
 use filmcraft_project::Transcript;
 use filmcraft_time::{TICKS_PER_SECOND, Tick};
