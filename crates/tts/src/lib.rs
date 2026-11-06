@@ -10,6 +10,7 @@
 //! Everything is deterministic: the same script and settings give the same samples.
 
 pub mod catalog;
+pub mod chatterbox;
 pub mod formant;
 #[cfg(feature = "kokoro")]
 pub mod kokoro;
@@ -122,14 +123,16 @@ pub trait Voice: Send + Sync {
     fn synthesize(&self, text: &str, params: &Params) -> Result<Audio, TtsError>;
 }
 
-/// Languages offered (English only for now).
-pub const LANGUAGES: &[(&str, &str)] = &[("en-US", "English (United States)")];
+/// Languages offered. The built-in and Kokoro voices speak English; Chatterbox (FilmCraft-AI)
+/// speaks all of them.
+pub const LANGUAGES: &[(&str, &str)] =
+    &[("en-US", "English (United States)"), ("fr-FR", "Français"), ("es-ES", "Español"), ("de-DE", "Deutsch"), ("it-IT", "Italiano")];
 
 /// Every voice FilmCraft knows: the built-in voices, then the neural voices (installed when their
 /// package is downloaded into `models_dir`).
 pub fn voices_in(models_dir: Option<&std::path::Path>) -> Vec<VoiceInfo> {
     let installed = models_dir.is_some_and(catalog::installed) && cfg!(feature = "kokoro");
-    formant::VOICES.iter().map(|v| v.info).chain(catalog::VOICES.iter().map(|v| VoiceInfo { installed, ..v.info })).collect()
+    formant::VOICES.iter().map(|v| v.info).chain(catalog::VOICES.iter().map(|v| VoiceInfo { installed, ..v.info })).chain(chatterbox::voices()).collect()
 }
 
 /// The built-in voices (always available).
@@ -148,6 +151,9 @@ pub fn voice(id: &str) -> Result<Box<dyn Voice>, TtsError> {
 
 /// The voice `id`: built in, or (feature `kokoro`) a neural voice from the package in `models_dir`.
 pub fn voice_in(id: &str, models_dir: Option<&std::path::Path>) -> Result<Box<dyn Voice>, TtsError> {
+    if let Some(v) = chatterbox::find(id) {
+        return Ok(Box::new(v));
+    }
     if catalog::find(id).is_some() {
         #[cfg(feature = "kokoro")]
         {

@@ -1,0 +1,17 @@
+[package]
+name = "filmcraft-ai-bridge"
+description = "FilmCraft local AI bridge: finds the FilmCraft-AI folder (config.json, per-model Python environments and workers) and runs WhisperX, Chatterbox and WanGP workers as cancellable child processes; small WAV reader and writer"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+rust-version.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+
+[dev-dependencies]
+tempfile = "3.27"

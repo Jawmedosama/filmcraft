@@ -252,14 +252,29 @@ pub fn show(app: &mut FilmcraftApp, ui: &mut egui::Ui, rect: Rect) {
             }
         });
         auto.add("tts.language", visible(ui, cb.response.rect), "Language");
+        // a voice of another language is kept only while it speaks the chosen one
+        if !voices.iter().any(|v| v.id == d.voice && v.language == d.language)
+            && let Some(v) = voices.iter().filter(|v| v.language == d.language).max_by_key(|v| (v.installed, v.engine == filmcraft_tts::chatterbox::ENGINE))
+        {
+            d.voice = v.id.to_string();
+        }
         ui.add_space(10.0);
         label(ui, &t, "Voice");
         let voice_name = voices.iter().find(|v| v.id == d.voice).map_or(d.voice.as_str(), |v| v.name);
         let cb = craft_ui::ComboBox::from_id_salt("tts-voice").selected_text(voice_name).width(w).show_ui(ui, |ui| {
-            for (engine, heading) in [("neural", "Natural voices"), ("basic", "Basic voices (built in)")] {
+            for (engine, heading) in
+                [(filmcraft_tts::chatterbox::ENGINE, "Chatterbox (FilmCraft-AI)"), ("neural", "Natural voices"), ("basic", "Basic voices (built in)")]
+            {
+                if !voices.iter().any(|v| v.language == d.language && v.engine == engine) {
+                    continue;
+                }
                 ui.label(egui::RichText::new(heading).color(t.text_faint).size(11.0));
                 for v in voices.iter().filter(|v| v.language == d.language && v.engine == engine) {
-                    let label = if v.engine == "neural" && !v.installed { format!("{} (download)", v.name) } else { v.name.to_string() };
+                    let label = match v.engine {
+                        "neural" if !v.installed => format!("{} (download)", v.name),
+                        e if e == filmcraft_tts::chatterbox::ENGINE && !v.installed => format!("{} (not set up)", v.name),
+                        _ => v.name.to_string(),
+                    };
                     let r = ui.selectable_label(d.voice == v.id, label).on_hover_text(v.description);
                     if r.clicked() {
                         d.voice = v.id.to_string();

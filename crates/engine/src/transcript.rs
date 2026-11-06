@@ -37,7 +37,7 @@ pub fn models_dir() -> Option<std::path::PathBuf> {
 
 /// Whether this build can transcribe with Whisper (feature `whisper`).
 pub fn speech_available() -> bool {
-    filmcraft_speech::available()
+    filmcraft_speech::available() || filmcraft_speech::whisperx::available()
 }
 
 /// The words of the active sequence's transcript.
@@ -135,6 +135,18 @@ fn transcriber(s: &Session, p: &Value) -> Result<Arc<dyn Transcriber>> {
     }
     // Settings ▸ Media Analysis & Transcription ▸ Speech model
     let model = str_p(p, "model").unwrap_or(&s.prefs.media_analysis.whisper_model);
+    // WhisperX from the local FilmCraft-AI folder: when chosen, or when the built-in Whisper
+    // can't run here (not built in, or the chosen model not downloaded) and WhisperX is installed.
+    let builtin_ready = filmcraft_speech::available()
+        && filmcraft_speech::models::find(model).is_some_and(|m| models_dir().is_some_and(|d| filmcraft_speech::models::installed(&d, m)));
+    if model == filmcraft_speech::whisperx::MODEL_ID || !builtin_ready {
+        if let Some(w) = filmcraft_speech::whisperx::WhisperX::find() {
+            return Ok(Arc::new(w));
+        }
+        if model == filmcraft_speech::whisperx::MODEL_ID {
+            return Err(EngineError::Other("WhisperX is not installed: run installer.bat in the FilmCraft-AI folder".into()));
+        }
+    }
     if filmcraft_speech::models::find(model).is_none() {
         return Err(speech_err(SpeechError::UnknownModel(model.into())));
     }
@@ -434,14 +446,19 @@ fn create_captions(s: &mut Session, p: &Value) -> Result<Value> {
 fn models(_: &mut Session, _: &Value) -> Result<Value> {
     let dir = models_dir();
     Ok(json!({
-        "available": filmcraft_speech::available(),
+        "available": speech_available(),
         "default": filmcraft_speech::models::DEFAULT_MODEL,
         "dir": dir.as_ref().map(|d| d.to_string_lossy().to_string()),
         "models": filmcraft_speech::models::catalogue().iter().map(|m| json!({
             "id": m.id, "name": m.name, "multilingual": m.multilingual, "description": m.description,
             "license": m.license, "source": m.source, "size": m.size(),
             "installed": dir.as_ref().is_some_and(|d| filmcraft_speech::models::installed(d, m)),
-        })).collect::<Vec<_>>(),
+        })).chain(std::iter::once(json!({
+            "id": filmcraft_speech::whisperx::MODEL_ID, "name": "WhisperX", "multilingual": true,
+            "description": "WhisperX from the local FilmCraft-AI folder (GPU, word alignment)",
+            "license": "BSD-2-Clause", "source": "FilmCraft-AI", "size": 0,
+            "installed": filmcraft_speech::whisperx::available(),
+        }))).collect::<Vec<_>>(),
     }))
 }
 

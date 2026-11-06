@@ -22,6 +22,7 @@ filmcraft-project = { workspace = true }
 serde = { workspace = true }
 serde_json = { workspace = true }
 thiserror = { workspace = true }
+filmcraft-ai-bridge = { workspace = true }
 candle-core = { version = "0.9", default-features = false, optional = true }
 candle-nn = { version = "0.9", default-features = false, optional = true }
 rayon = { workspace = true }
